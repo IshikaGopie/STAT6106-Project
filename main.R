@@ -2,8 +2,13 @@
 # https://www.kaggle.com/datasets/dileep070/heart-disease-prediction-using-logistic-regression/data
 # install.packages("ggplot2")
 #install.packages("lmtest")
+#install.packages("performanceEstimation")
+#install.packages("ROSE")
+#install.packages("smotefamily")
 library(ggplot2)
 library(lmtest)
+library(smotefamily)
+library(ROSE)
 set.seed(123)
 
 
@@ -97,21 +102,28 @@ colSums(is.na(data))
 # output the distributions of the 10YrsCHD column in a hystogram
 ggplot(data, aes(x=TenYearCHD)) + geom_histogram(binwidth=1, fill="skyblue", color="black") + labs(title="Distribution of Ten Year CHD", x="Ten Year CHD", y="Frequency")
 
-# # The data is very imbalanced, with a majority of the observations having a value of 0 for TenYearCHD
-# # we can fix this by oversampling the minority class using the SMOTE algorithm
-#
-# # Oversample the minority class using the SMOTE algorithm
-# data_balanced <- SMOTE(TenYearCHD ~ ., data, perc.over=100, k=5, perc.under=100)
+# output the number of observations with a value of 1 and 0 for TenYearCHD
+cat("\n ### Number of observations with a value of 1 and 0 for TenYearCHD ###\n")
+table(data$TenYearCHD)
 
+# The data is very imbalanced, with a majority of the observations having a value of 0 for TenYearCHD
+# we can fix this by oversampling the minority class using the SMOTE algorithm
+
+# Oversample the minority class using the SMOTE algorithm
+data_balanced <- ovun.sample(TenYearCHD ~ ., data=data, method="over")$data
 # output the distributions of the 10YrsCHD column in a hystogram after balancing
-#ggplot(data_balanced, aes(x=TenYearCHD)) + geom_histogram(binwidth=1, fill="skyblue", color="black") + labs(title="Distribution of Ten Year CHD", x="Ten Year CHD", y="Frequency")
+ggplot(data_balanced, aes(x=TenYearCHD)) + geom_histogram(binwidth=1, fill="skyblue", color="black") + labs(title="Distribution of Ten Year CHD", x="Ten Year CHD", y="Frequency")
+
+# output the number of observations with a value of 1 and 0 for TenYearCHD after balancing
+cat("\n ### Number of observations with a value of 1 and 0 for TenYearCHD after balancing ###\n")
+table(data_balanced$TenYearCHD)
 
 # Model Building
 # using logistic regression to predict the probability of developing coronary heart disease in the next 10 years
 
 # Split the data into training and testing sets
 # attach is used to attach the data frame to the search path
-attach(data)
+attach(data_balanced)
 
 # create a data frame with the independent variables and the dependent variable, use all the variables
 df <- data.frame(cbind(male, age, education, currentSmoker, cigsPerDay, BPMeds, prevalentStroke, prevalentHyp, diabetes, totChol, sysBP, diaBP, BMI, heartRate, glucose, TenYearCHD))
@@ -131,14 +143,18 @@ qnorm(1 - 0.05/2)
 cat("\n ### Confidence intervals for the coefficients ###\n")
 confint(logmodel, level=0.95)
 
-# Based on the p-values, we can see that gender, age, cigarettes per day, prevalentStroke, systolic blood pressure and glucose are significant predictors of the probability of developing coronary heart disease in the next 10 years
+# Based on the p-values, we can see that gender, age, education, cigsPerDay, BPMeds, prevalentStroke, prevalentHyp, diabetes, totChol, sysBP and glucose are significant predictors of the probability of developing coronary heart disease in the next 10 years
 
 # Step 2: Test for significance of the model using the likelihood ratio test
 # Ho : The reduced model is significantly better than the full model
 # H1 : The reduced model is not significantly better than the full model
 
 # create a reduced model with only significant predictors
-reduced_model <- glm(TenYearCHD ~ male + age + cigsPerDay + prevalentStroke + sysBP + glucose, family=binomial, data=df)
+reduced_model <- glm(TenYearCHD ~ male + age + education + cigsPerDay + BPMeds + prevalentStroke + prevalentHyp + diabetes + totChol + sysBP + glucose, family=binomial, data=df)
+
+# summary of the reduced model
+cat("\n ### Summary of the reduced model ###\n")
+summary(reduced_model)
 
 # likelihood ratio test
 cat("\n ### Likelihood ratio test ###\n")
@@ -146,13 +162,13 @@ lrtest(reduced_model, logmodel)
 
 # calculate the critical value for a 95% confidence interval
 cat("\n ### critical value for a 95% confidence interval ###\n")
-qchisq(0.95, df=9-1)
+qchisq(0.95, df=4-1)
 
-# since the test statistic = 8.9956 < critical value = 15.50731 and
-# the p-value = 0.4377 > 0.05, we fail to reject the null hypothesis
+# since the test statistic =  7.814728 < critical value = 15.50731 and
+# the p-value =  0.8178 > 0.05, we fail to reject the null hypothesis
 # this means that the reduced model is significantly better than the full model
 
 # Step 3: Calculate the R-squared value of the model, Adequacy of the model
-# R-squared = 1 - (residual deviance/reduced deviance)
 cat("\n ### R-squared value of the model ###\n")
-1 - (logmodel$deviance/reduced_model$deviance)
+nullmodel <- glm(TenYearCHD ~ 1, family=binomial)
+1-(reduced_model$deviance/nullmodel$deviance)
