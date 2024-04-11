@@ -97,21 +97,21 @@ colSums(is.na(data))
 # output the distributions of the 10YrsCHD column in a hystogram
 ggplot(data, aes(x=TenYearCHD)) + geom_histogram(binwidth=1, fill="skyblue", color="black") + labs(title="Distribution of Ten Year CHD", x="Ten Year CHD", y="Frequency")
 
-# The data is very imbalanced, with a majority of the observations having a value of 0 for TenYearCHD
-# we can fix this by oversampling the minority class using the SMOTE algorithm
-
-# Oversample the minority class using the SMOTE algorithm
-data_balanced <- SMOTE(TenYearCHD ~ ., data, perc.over=100, k=5, perc.under=100)
+# # The data is very imbalanced, with a majority of the observations having a value of 0 for TenYearCHD
+# # we can fix this by oversampling the minority class using the SMOTE algorithm
+#
+# # Oversample the minority class using the SMOTE algorithm
+# data_balanced <- SMOTE(TenYearCHD ~ ., data, perc.over=100, k=5, perc.under=100)
 
 # output the distributions of the 10YrsCHD column in a hystogram after balancing
-ggplot(data_balanced, aes(x=TenYearCHD)) + geom_histogram(binwidth=1, fill="skyblue", color="black") + labs(title="Distribution of Ten Year CHD", x="Ten Year CHD", y="Frequency")
+#ggplot(data_balanced, aes(x=TenYearCHD)) + geom_histogram(binwidth=1, fill="skyblue", color="black") + labs(title="Distribution of Ten Year CHD", x="Ten Year CHD", y="Frequency")
 
 # Model Building
 # using logistic regression to predict the probability of developing coronary heart disease in the next 10 years
 
 # Split the data into training and testing sets
 # attach is used to attach the data frame to the search path
-attach(data_balanced)
+attach(data)
 
 # create a data frame with the independent variables and the dependent variable, use all the variables
 df <- data.frame(cbind(male, age, education, currentSmoker, cigsPerDay, BPMeds, prevalentStroke, prevalentHyp, diabetes, totChol, sysBP, diaBP, BMI, heartRate, glucose, TenYearCHD))
