@@ -6,11 +6,14 @@
 #install.packages("performanceEstimation")
 #install.packages("ROSE")
 #install.packages("boot")
+#install.packages("caret")
+
 
 library(ggplot2)
 library(lmtest)
 library(ROSE)
 library(boot)
+library(caret)
 set.seed(123)
 
 
@@ -193,27 +196,25 @@ nullmodel <- glm(TenYearCHD ~ 1, family=binomial)
 # Although the reduced model is significance , the R-squared value is low and the AIC is high. This indicates that the model is not very good at predicting the probability of developing coronary heart disease in the next 10 years.
 
 # ---------------------------------- Model Evaluation -----------------------------------
-# Bootstrap
-# Step 4: Evaluate the model using bootstrapping
+# Cross-validation
+cat("\n ### Model Evaluation using Cross-validation ###\n")
+# Step 4: Evaluate the model using cross-validation
 
-# Define a function to calculate the R-squared value of the model
-r_squared <- function(formula, data, indices) {
-  d <- data[indices,]
-  fit <- glm(formula, data=d, family=binomial)
-  return(coef(fit))
-}
+# Define a function to calculate the accuracy of the model
+dim(df)
 
-# Perform bootstrapping with 2000 replications
-output <- boot(data=df, statistic=r_squared, R=2000, formula = TenYearCHD ~ male + age + education + cigsPerDay + BPMeds + prevalentStroke + prevalentHyp + diabetes + totChol + sysBP + glucose)
+control <- trainControl(method = "cv", number = 10, classProbs=TRUE)
 
-# Display the bootstrapping results
-cat("\n ### Bootstrapping results ###\n")
-output
+model <- train(TenYearCHD ~ male + age + education + cigsPerDay + BPMeds + prevalentStroke + prevalentHyp + diabetes + totChol + sysBP + glucose, data=df, method="glm", trControl=control)
 
-# Plot the bootstrapping results
-cat("\n ### Plot of the bootstrapping results ###\n")
-plot(output)
+# output the model
+cat("\n ### Model ###\n")
+model
 
-# Generate bootstrapped confidence intervals
-cat("\n ### Bootstrapped confidence intervals ###\n")
-boot.ci(output, type="bca")
+# output the resamples
+cat("\n ### Resamples ###\n")
+model$resample
+
+# output the final model
+cat("\n ### Final Model ###\n")
+model$finalModel
