@@ -218,3 +218,17 @@ model$resample
 # output the final model
 cat("\n ### Final Model ###\n")
 model$finalModel
+
+# measures the average difference between the predictions VS actual observations.
+# The lower the RMSE, the more closely a model can predict the actual observations
+# The RMSE = 0.4594493
+
+# The root mean squared error measures the average difference between the
+# predictions made by the model and the actual observations. The lower the RMSE,
+# the more closely a model can predict the actual observations
+#R-squared: 0.1566691
+
+# The mean absolute error is the average absolute difference between the predictions
+# made by the model and the actual observations. The lower the MAE, the more
+# closely a model can predict the actual observations.
+#MAE: 0.4225391
