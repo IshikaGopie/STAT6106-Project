@@ -1,20 +1,24 @@
 # load the dataset
 # https://www.kaggle.com/datasets/dileep070/heart-disease-prediction-using-logistic-regression/data
-# install.packages("ggplot2")
+
+#install.packages("ggplot2")
 #install.packages("lmtest")
 #install.packages("performanceEstimation")
 #install.packages("ROSE")
-#install.packages("smotefamily")
+#install.packages("boot")
+
 library(ggplot2)
 library(lmtest)
-library(smotefamily)
 library(ROSE)
+library(boot)
 set.seed(123)
 
 
+# ---------------------------------- Data Preparation -----------------------------------
 # Load the data
 data <- read.csv("heart.csv", header=T)
 
+# ---------------------------------- Data Exploration -----------------------------------
 # Data exploration
 
 # Display the first few rows of the data
@@ -33,7 +37,7 @@ str(data)
 cat("\n ### Summary statistics of the data ###\n")
 summary(data)
 
-# Data Cleaning
+#---------------------------------- Data Cleaning -----------------------------------
 
 # Check for missing values in each column
 cat("\n ### Missing values in each column ###\n")
@@ -99,6 +103,8 @@ data$glucose[is.na(data$glucose)] <- median(data$glucose, na.rm=TRUE)
 cat("\n ### Missing values in each column after imputation ###\n")
 colSums(is.na(data))
 
+#---------------------------------- Over Sampling -----------------------------------
+
 # output the distributions of the 10YrsCHD column in a hystogram
 ggplot(data, aes(x=TenYearCHD)) + geom_histogram(binwidth=1, fill="skyblue", color="black") + labs(title="Distribution of Ten Year CHD", x="Ten Year CHD", y="Frequency")
 
@@ -118,6 +124,7 @@ ggplot(data_balanced, aes(x=TenYearCHD)) + geom_histogram(binwidth=1, fill="skyb
 cat("\n ### Number of observations with a value of 1 and 0 for TenYearCHD after balancing ###\n")
 table(data_balanced$TenYearCHD)
 
+#---------------------------------- Model Building -----------------------------------
 # Model Building
 # using logistic regression to predict the probability of developing coronary heart disease in the next 10 years
 
@@ -135,6 +142,9 @@ logmodel <- glm(TenYearCHD ~ ., family=binomial, data=df)
 cat("\n ### Summary of the logistic regression model ###\n")
 summary(logmodel)
 
+# ---------------------------------- Testing for significance -----------------------------------
+# ---------------------------------- Wald test ------------------------------------------------
+
 # qnorm(1 - 0.05/2) is used to calculate the z-value for a 95% confidence interval
 cat("\n ### critical value for a 95% confidence interval ###\n")
 qnorm(1 - 0.05/2)
@@ -143,8 +153,11 @@ qnorm(1 - 0.05/2)
 cat("\n ### Confidence intervals for the coefficients ###\n")
 confint(logmodel, level=0.95)
 
-# Based on the p-values, we can see that gender, age, education, cigsPerDay, BPMeds, prevalentStroke, prevalentHyp, diabetes, totChol, sysBP and glucose are significant predictors of the probability of developing coronary heart disease in the next 10 years
+# Based on the p-values, we can see that gender, age, education, cigsPerDay, BPMeds, prevalentStroke,
+# prevalentHyp, diabetes, totChol, sysBP and glucose are significant predictors of
+# the probability of developing coronary heart disease in the next 10 years
 
+# ---------------------------------- Likelihood ratio test -----------------------------------
 # Step 2: Test for significance of the model using the likelihood ratio test
 # Ho : The reduced model is significantly better than the full model
 # H1 : The reduced model is not significantly better than the full model
@@ -162,13 +175,45 @@ lrtest(reduced_model, logmodel)
 
 # calculate the critical value for a 95% confidence interval
 cat("\n ### critical value for a 95% confidence interval ###\n")
-qchisq(0.95, df=4-1)
+qchisq(0.95, df=4)
 
-# since the test statistic =  7.814728 < critical value = 15.50731 and
+# since the test statistic =  1.5496 < critical value = 9.487729 and
 # the p-value =  0.8178 > 0.05, we fail to reject the null hypothesis
 # this means that the reduced model is significantly better than the full model
 
+# ---------------------------------- Test for Adequacy -----------------------------------
 # Step 3: Calculate the R-squared value of the model, Adequacy of the model
 cat("\n ### R-squared value of the model ###\n")
 nullmodel <- glm(TenYearCHD ~ 1, family=binomial)
 1-(reduced_model$deviance/nullmodel$deviance)
+
+# The R-squared value of the model is 0.123 which indicates that the predictability of the model is not very good
+
+# The AIC of the reduced model is 8698.8. Very big value when compared to the size of the dataset. This indicates that a lot of information would be lost.
+# Although the reduced model is significance , the R-squared value is low and the AIC is high. This indicates that the model is not very good at predicting the probability of developing coronary heart disease in the next 10 years.
+
+# ---------------------------------- Model Evaluation -----------------------------------
+# Bootstrap
+# Step 4: Evaluate the model using bootstrapping
+
+# Define a function to calculate the R-squared value of the model
+r_squared <- function(formula, data, indices) {
+  d <- data[indices,]
+  fit <- glm(formula, data=d, family=binomial)
+  return(coef(fit))
+}
+
+# Perform bootstrapping with 2000 replications
+output <- boot(data=df, statistic=r_squared, R=2000, formula = TenYearCHD ~ male + age + education + cigsPerDay + BPMeds + prevalentStroke + prevalentHyp + diabetes + totChol + sysBP + glucose)
+
+# Display the bootstrapping results
+cat("\n ### Bootstrapping results ###\n")
+output
+
+# Plot the bootstrapping results
+cat("\n ### Plot of the bootstrapping results ###\n")
+plot(output)
+
+# Generate bootstrapped confidence intervals
+cat("\n ### Bootstrapped confidence intervals ###\n")
+boot.ci(output, type="bca")
