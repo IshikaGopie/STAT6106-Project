@@ -186,6 +186,15 @@ qchisq(0.95, df=4)
 # the p-value =  0.8178 > 0.05, we fail to reject the null hypothesis
 # this means that the reduced model is significantly better than the full model
 
+
+# Let's compare the null model against the reduced model
+cat("\n ### Comparison of the null model against the reduced model ###\n")
+nullmodel <- glm(TenYearCHD ~ 1, family=binomial)
+lrtest(nullmodel, reduced_model)
+
+cat("\n### critical value for a 95% confidence interval for the null model against the reduced model ###\n")
+qchisq(0.95, df=11)
+
 # ---------------------------------- Test for Adequacy -----------------------------------
 # Step 3: Calculate the R-squared value of the model, Adequacy of the model
 cat("\n ### R-squared value of the model ###\n")
