@@ -147,6 +147,7 @@ summary(logmodel)
 
 # ---------------------------------- Testing for significance -----------------------------------
 # ---------------------------------- Wald test ------------------------------------------------
+cat("\n ### Wald test ###\n")
 
 # qnorm(1 - 0.05/2) is used to calculate the z-value for a 95% confidence interval
 cat("\n ### critical value for a 95% confidence interval ###\n")
@@ -161,6 +162,7 @@ confint(logmodel, level=0.95)
 # the probability of developing coronary heart disease in the next 10 years
 
 # ---------------------------------- Likelihood ratio test -----------------------------------
+cat("\n ### Likelihood ratio test ###\n")
 # Step 2: Test for significance of the model using the likelihood ratio test
 # Ho : The reduced model is significantly better than the full model
 # H1 : The reduced model is not significantly better than the full model
