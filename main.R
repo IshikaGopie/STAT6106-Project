@@ -238,7 +238,7 @@ selected_columns <- c("male", "age", "education", "cigsPerDay", "BPMeds", "preva
 # Create a new dataframe with only the selected columns
 new_dataframe <- df[, selected_columns]
 
-# function that would loop the dataframe and predict the probability of developing coronary heart disease in the next 10 years for the first 5 rows
+# function that would loop the dataframe and predict the probability of developing coronary heart disease in the next 10 years for the first 10 rows
 predictions <- function (new_dataframe, model){
     for (i in 1:10){
         pred <- predict(model, newdata=new_dataframe[i,], type="raw")
