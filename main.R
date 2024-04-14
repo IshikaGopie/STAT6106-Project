@@ -213,7 +213,6 @@ cat("\n ### R-squared value of the reduced model ###\n")
 cat("\n ### Model Evaluation using Cross-validation ###\n")
 # Step 4: Evaluate the model using cross-validation
 
-# Define a function to calculate the accuracy of the model
 dim(df)
 
 control <- trainControl(method = "cv", number = 10, classProbs=TRUE)
