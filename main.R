@@ -3,16 +3,12 @@
 
 #install.packages("ggplot2")
 #install.packages("lmtest")
-#install.packages("performanceEstimation")
 #install.packages("ROSE")
-#install.packages("boot")
 #install.packages("caret")
-
 
 library(ggplot2)
 library(lmtest)
 library(ROSE)
-library(boot)
 library(caret)
 set.seed(123)
 
