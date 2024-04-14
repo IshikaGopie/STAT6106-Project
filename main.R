@@ -127,6 +127,9 @@ ggplot(data_balanced, aes(x=TenYearCHD)) + geom_histogram(binwidth=1, fill="skyb
 cat("\n ### Number of observations with a value of 1 and 0 for TenYearCHD after balancing ###\n")
 table(data_balanced$TenYearCHD)
 
+# scrambled the data
+data_balanced <- data_balanced[sample(nrow(data_balanced)),]
+
 #---------------------------------- Model Building -----------------------------------
 # Model Building
 # using logistic regression to predict the probability of developing coronary heart disease in the next 10 years
@@ -196,9 +199,12 @@ cat("\n### critical value for a 95% confidence interval for the null model again
 qchisq(0.95, df=11)
 
 # ---------------------------------- Test for Adequacy -----------------------------------
+cat("\n ### Test for Adequacy ###\n")
 # Step 3: Calculate the R-squared value of the model, Adequacy of the model
 cat("\n ### R-squared value of the model ###\n")
-nullmodel <- glm(TenYearCHD ~ 1, family=binomial)
+1-(logmodel$deviance/nullmodel$deviance)
+
+cat("\n ### R-squared value of the reduced model ###\n")
 1-(reduced_model$deviance/nullmodel$deviance)
 
 # The R-squared value of the model is 0.123 which indicates that the predictability of the model is not very good
@@ -230,16 +236,21 @@ model$resample
 cat("\n ### Final Model ###\n")
 model$finalModel
 
-# measures the average difference between the predictions VS actual observations.
-# The lower the RMSE, the more closely a model can predict the actual observations
-# The RMSE = 0.4594493
+# ---------------------------------- Model  Prediction -----------------------------------
+# dtaframe containing only the significant predictors
+selected_columns <- c("male", "age", "education", "cigsPerDay", "BPMeds", "prevalentStroke", "prevalentHyp", "diabetes", "totChol", "sysBP", "glucose")
 
-# The root mean squared error measures the average difference between the
-# predictions made by the model and the actual observations. The lower the RMSE,
-# the more closely a model can predict the actual observations
-#R-squared: 0.1566691
+# Create a new dataframe with only the selected columns
+new_dataframe <- df[, selected_columns]
 
-# The mean absolute error is the average absolute difference between the predictions
-# made by the model and the actual observations. The lower the MAE, the more
-# closely a model can predict the actual observations.
-#MAE: 0.4225391
+# function that would loop the dataframe and predict the probability of developing coronary heart disease in the next 10 years for the first 5 rows
+predictions <- function (new_dataframe, model){
+    for (i in 1:10){
+        pred <- predict(model, newdata=new_dataframe[i,], type="raw")
+        cat("\n ### Prediction for row ", i, " ###\n")
+        print(pred)
+    }
+}
+
+# output the predictions
+predictions(new_dataframe, model)
